@@ -9,43 +9,64 @@ public class HUD : MonoBehaviour
 
     Transform inventoryPanel;
 
+    InventorySlot[] slots;
+
     void Start()
     {
         inventoryPanel = transform.Find("InventoryPanel");
 
-        inventory.ItemAdded += AddItemUI;
-        inventory.ItemRemove += RemoveItemUI;
+        inventory.AddUI += AddUI;
+        inventory.RemoveUI += RemoveUI;
+
+        slots = inventoryPanel.GetComponentsInChildren<InventorySlot>();
     }
 
-    void AddItemUI(Item item)
+    void AddUI(Item item)
     {
-        foreach(Transform slot in inventoryPanel)
+        bool notExist = true;
+        for (int i = 0; i < slots.Length; i++)
         {
-            Image image = slot.GetChild(0).GetChild(0).GetComponent<Image>();
-            if (!image.enabled)
+            if (slots[i].items.Contains(item))
             {
-                image.enabled = true;
-                image.sprite = item.itemIcon;
+                slots[i].AddItem(item);
+                notExist = false;
 
                 break;
             }
         }
-    }
-
-    void RemoveItemUI(string type)
-    {
-        foreach (Transform slot in inventoryPanel)
+        if (notExist)
         {
-            Image image = slot.GetChild(0).GetChild(0).GetComponent<Image>();
-            if (image.enabled)
+            for (int i = 0; i < slots.Length; i++)
             {
-                if(image.sprite.name == type)
+                if(slots[i].items.Count <= 0)
                 {
-                    image.sprite = null;
-                    image.enabled = false;
+                    slots[i].AddItem(item);
 
                     break;
                 }
+            }
+        }
+    }
+
+    void RemoveUI(Item item, int amount)
+    {
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i].items.Contains(item))
+            {
+                for (int j = 0; j < amount; j++)
+                {
+                    slots[i].items.RemoveAt(slots[i].items.Count - 1);
+                    if (slots[i].items.Count <= 0)
+                    {
+                        slots[i].ClearSlot();
+                    }
+                }
+                if (slots[i].items.Count > 0)
+                {
+                    slots[i].UpdateSlot();
+                }
+                break;
             }
         }
     }

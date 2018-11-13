@@ -4,48 +4,50 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    private Dictionary<string, List<Item>> _items = new Dictionary<string, List<Item>>();
+    public List<List<Item>> items = new List<List<Item>>();
 
     private const int slots = 50; 
 
-    public event Action<Item> ItemAdded;
-    public event Action<string> ItemRemove;
+    public event Action<Item> AddUI;
+    public event Action<Item, int> RemoveUI;
 
-    public void AddItem(IInventoryItem item)
+    public void AddItem(Item item)
     {
-        if (_items.ContainsKey(item.GetItemData.itemName) && item.GetItemData.stackable)
+        bool notExist = true;
+        for (int i = 0; i < items.Count; i++)
         {
-            _items[item.GetItemData.itemName].Add(item.GetItemData);
+            if(items[i].Contains(item))
+            {
+                items[i].Add(item);
+                notExist = false;
+            }
         }
-        else if (_items.Count <= slots)
+        if(items.Count < slots && notExist)
         {
-            _items.Add(item.GetItemData.itemName, new List<Item>());
-            _items[item.GetItemData.itemName].Add(item.GetItemData);
-            ItemAdded(item.GetItemData);
-            item.OnPickup();
+            items.Add(new List<Item>());
+            items[items.Count -1].Add(item);
         }
-    }
-	
-    public void RemoveItem(string type)
-    {
-        ItemRemove(type);
-        if(_items[type].Count <= 0)
-        {
-            _items.Remove(type);
-        }
-        else
-        {
-            _items[type].RemoveAt(_items[type].Count);
-        }
+        AddUI(item);
     }
 
-    public Item GetItem(string type)
+    public void RemoveItem(Item item, int amount)
     {
-        if (!_items.ContainsKey(type))
+        for (int i = 0; i < items.Count; i++)
         {
-            return null;
+            if(items[i].Contains(item))
+            {
+                for (int j = 0; j < amount; j++)
+                {
+                    items[i].RemoveAt(items[i].Count - 1);
+                    if (items[i].Count <= 0)
+                    {
+                        items.RemoveAt(i);
+                        RemoveUI(item, amount);
+                        break;
+                    }
+                }
+                break;
+            }
         }
-
-        return _items[type][0];
     }
 }

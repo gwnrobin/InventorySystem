@@ -20,7 +20,8 @@ public class PlayerController : MonoBehaviour
         IInventoryItem item = collision.collider.GetComponent<IInventoryItem>();
         if (item != null)
         {
-            inventory.AddItem(item);
+            item.OnPickup();
+            inventory.AddItem(item.GetItemData);
         }
     }
 }
